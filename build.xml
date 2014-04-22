@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<project name="spring-radius-proxy" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property file="properties/${user.name}.properties" />
+	<property file="properties/build.properties" />
+	<property file="${user.home}/default.properties" />
+
+	<!-- pe-build properties -->
+	<property name="findbugs.excludes.file" location="etc/findbugs/exclusions.xml" />
+	<property name="build.report.checkstyle.config.file" location="etc/checkstyle/checks.xml" />
+	<property name="suppressions.file" location="etc/checkstyle/suppressions.xml" />
+	<property name="build.report.reports" value="${basedir}/build/reports" />
+	<property name="pe-build.optional" value="false" />
+	<property name="unittest.base" value="${pe-build.dir}/unittest" />
+	<property name="reporting.base" value="${pe-build.dir}/reporting" />
+
+	<import file="${unittest.base}/build.xml" optional="${pe-build.optional}" />
+	<import file="${reporting.base}/build.xml" optional="${pe-build.optional}" />
+
+	<target name="ci" depends="clean, publish" />
+
+	<path id="external.classpath">
+		<pathelement location="src/test/resources" />
+		<pathelement location="src/main/resources" />
+	</path>
+
+	<target name="clean" description="clean">
+		<delete dir="build" />
+	</target>
+
+	<target name="ivy.report" depends="resolve">
+		<mkdir dir="report" />
+		<ivy:resolve type="${ivy.resolve.types}" />
+		<ivy:report todir="report" />
+	</target>
+
+	<target name="resolve" description="ivy" depends="clean">
+		<!-- this copies all to lib/main -->
+		<ivy:retrieve pattern="build/lib/main/[artifact]-[revision].[ext]" conf="main" type="jar,bundle" />
+		<ivy:retrieve pattern="build/lib/main/[artifact]-[revision]-[type].[ext]" conf="main" type="sources" />
+		<!-- this copies all to lib/test -->
+		<ivy:retrieve pattern="build/lib/test/[artifact]-[revision].[ext]" conf="test" type="jar,bundle" />
+		<ivy:retrieve pattern="build/lib/test/[artifact]-[revision]-[type].[ext]" conf="test" type="sources" />
+
+		<ivy:cachepath pathid="main.classpath" conf="main" />
+		<ivy:cachepath pathid="test.classpath" conf="test" />
+	</target>
+
+	<target name="compile" description="compiles main and test" depends="compile.test" />
+
+	<target name="compile.main" depends="resolve">
+		<mkdir dir="build/classes/main" />
+		<javac includes="**/*.java" debug="true" destdir="build/classes/main" target="1.4" source="1.4" includeantruntime="false">
+			<src path="src/main/java" />
+			<classpath>
+				<path refid="main.classpath" />
+			</classpath>
+		</javac>
+		<copy todir="build/classes/main" failonerror="false">
+			<fileset dir="src/main/resources" />
+		</copy>
+	</target>
+
+	<target name="compile.test" depends="compile.main" unless="test.skip">
+		<mkdir dir="build/classes/test" />
+		<javac includes="**/*.java" debug="true" destdir="build/classes/test" target="1.6" source="1.6" includeantruntime="false">
+			<src path="src/test/java" />
+			<classpath>
+				<pathelement location="build/classes/main" />
+				<path refid="test.classpath" />
+				<path refid="main.classpath" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="test" depends="compile" description="run the tests" unless="test.skip">
+		<property name="unittest.junit.forkmode" value="once" />
+		<antcall target="unit.test" />
+	</target>
+
+	<target name="report" depends="test" description="run the reports" unless="test.skip">
+		<antcall target="build.report" />
+	</target>
+
+	<target name="jar" depends="report">
+		<mkdir dir="build/jar"/>
+		<copy todir="build/jar">
+			<fileset dir="build/classes/main" />
+		</copy>
+		<unjar dest="build/jar">
+			<fileset dir="lib/main"/>
+		</unjar>
+			
+		<jar destfile="build/${ant.project.name}.jar" basedir="build/jar">
+			<manifest>
+				<attribute name="Main-Class" value="com.bt.wifi.radius.RadClient" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="publish" description="publish to Nexus" depends="jar">
+		<ivy:resolve />
+
+		<ivy:publish resolver="nexus-snapshots" overwrite="true" forcedeliver="true" publishivy="true">
+			<artifacts pattern="build/[artifact].[ext]" />
+		</ivy:publish>
+	</target>
+
+	<target name="release" description="release to Nexus" depends="jar">
+		<ivy:resolve />
+
+		<ivy:publish resolver="nexus-releases" pubrevision="1.0" overwrite="false" forcedeliver="true" publishivy="true">
+			<artifacts pattern="build/[artifact].[ext]" />
+		</ivy:publish>
+	</target>
+</project>

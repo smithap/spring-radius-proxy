@@ -1,0 +1,6 @@
+bin/
+logs/
+contiperf-report/
+build/
+dist/
+lib/

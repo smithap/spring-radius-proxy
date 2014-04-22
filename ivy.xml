@@ -1,0 +1,31 @@
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd" xmlns:m="http://ant.apache.org/ivy/maven"
+	xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="com.bt.wifi" module="radius-client" />
+	<configurations defaultconfmapping="*->default">
+		<conf name="main" />
+		<conf name="test" />
+		<conf name="compile" />
+	</configurations>
+	<publications>
+		<artifact name="spring-radius-proxy" type="jar" />
+	</publications>
+	<dependencies>
+		<!-- MAIN -->
+		<dependency org="org.tinyradius" name="tinyradius"  rev="latest.integration" conf="main->main" >
+			<include name="tinyradius"/>
+		</dependency>
+		<dependency org="commons-logging" name="commons-logging" rev="1.1.1" conf="main" />
+  		<dependency org="org.springframework" name="spring-core" rev="4.0.2.RELEASE" conf="main" />
+		<dependency org="org.springframework" name="spring-context-support" rev="4.0.2.RELEASE" conf="main"/>
+        <dependency org="log4j" name="log4j" rev="1.2.17" conf="main" />
+		<dependency org="net.sf.ehcache" name="ehcache" rev="2.7.0" conf="main"/>
+		<dependency org="org.apache.commons" name="commons-lang3" rev="3.1" conf="main"/>
+            
+		<!-- TEST -->
+		<dependency org="junit" name="junit" rev="4.10" conf="test" />
+		<dependency org="org.mockito" name="mockito-all" rev="1.9.0" conf="test" />
+  		<dependency org="org.springframework" name="spring-test" rev="4.0.2.RELEASE" conf="test" />
+  		<dependency org="org.databene" name="contiperf" rev="2.2.0" conf="test"/>
+  		
+	</dependencies>
+</ivy-module>

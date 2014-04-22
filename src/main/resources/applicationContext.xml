@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:cache="http://www.springframework.org/schema/cache"
+
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd
+	http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.0.xsd 
+	">
+	<context:component-scan base-package="com.bt.wifi.radiusproxy" />
+	<context:annotation-config />
+	<cache:annotation-driven />
+	<context:property-override location="classpath:springradiusproxy.properties" ignore-resource-not-found="true" ignore-unresolvable="true" />
+	<context:property-placeholder location="classpath:springradiusproxy.properties" ignore-resource-not-found="true" ignore-unresolvable="true" />
+
+	<!-- client configuration -->
+	<bean id="clientMap" class="org.springframework.beans.factory.config.MapFactoryBean">
+		<property name="sourceMap">
+			<map>
+				<entry key="localhost" value="testing123" />
+			</map>
+		</property>
+	</bean>
+
+	<!-- EhCache library setup -->
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+		<property name="cacheManager" ref="ehcache" />
+	</bean>
+
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="classpath:ehcache.xml" />
+	</bean>
+
+	<!-- thread pool -->
+	<task:annotation-driven executor="executor" />
+	<task:executor id="executor" pool-size="10" />
+
+	<!-- packet queue -->
+	<bean id="queue" class="java.util.concurrent.ArrayBlockingQueue">
+		<constructor-arg value="1000" />
+	</bean>
+</beans>
